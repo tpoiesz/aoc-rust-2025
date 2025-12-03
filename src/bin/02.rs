@@ -75,6 +75,10 @@ pub fn part_two(input: &str) -> Option<u64> {
 
 const POWERS: [u64;11] = [1, 10, 100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000, 100_000_000, 1_000_000_000, 10_000_000_000];
 
+// Takes a number 'e.g. 12' and repeats is 'times' times.
+// For performance reasons the size of the number is given as a parameter, so it doesn't have to be recalculated (don't do this in actual code haha)
+// e.g. repeat_number(12, 4, 2) = 12121212
+// This algorithm is faster than converting to strings, concatenating and then parsing again
 fn repeat_number(num: u64, times: usize, size: usize) -> u64 {
     let mut result = 0;
     let mut exp = 0;
