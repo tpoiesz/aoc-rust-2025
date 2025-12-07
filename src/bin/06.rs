@@ -1,28 +1,26 @@
 advent_of_code::solution!(6);
 
 pub fn part_one(input: &str) -> Option<u64> {
-    let mut problems = Vec::new();
-
-    let lines = input.lines().collect::<Vec<&str>>();
-    for number_line in &lines[..lines.len() - 1] {
-        for (idx, num) in number_line
-            .split_whitespace()
-            .map(|s| s.parse::<u64>().unwrap())
-            .enumerate() {
-            match problems.get_mut(idx) {
-                None => problems.push(vec![num]),
-                Some(nums) => nums.push(num),
-            }
-        }
-    }
+    let mut lines = input.lines().collect::<Vec<&str>>();
+    let operators = lines.pop().unwrap()
+        .split_ascii_whitespace()
+        .collect::<Vec<_>>();
+    let numbers = lines
+        .iter()
+        .map(|line| line
+            .split_ascii_whitespace()
+            .flat_map(|s| s.parse::<u64>())
+            .collect::<Vec<_>>()
+        ).collect::<Vec<_>>();
 
     let mut result = 0;
 
-    for (idx, operator) in lines.last().unwrap().split_ascii_whitespace().enumerate() {
-        match operator {
-            "+" => result += problems[idx].iter().sum::<u64>(),
-            "*" => result += problems[idx].iter().product::<u64>(),
-            _ => panic!(),
+    for (idx, &operator) in operators.iter().enumerate() {
+        let numbers = numbers.iter().map(|nums| nums[idx]);
+        result += match operator {
+            "+" => numbers.sum::<u64>(),
+            "*" => numbers.product(),
+            _ => unreachable!()
         }
     }
 
