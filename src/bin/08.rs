@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use advent_of_code::utils::disjoint_set::DisjointSet;
 
 advent_of_code::solution!(8);
 
@@ -10,32 +10,12 @@ pub fn part_one(input: &str) -> Option<u64> {
 
     let distances = calculate_distances_sorted(&boxes);
 
-    let mut circuits : Vec<HashSet<usize>> = Vec::new();
-    for (b1, b2, _) in &distances[0..N_SHORTEST_CONNECTIONS] {
-        let mut_iter = circuits.iter_mut();
-        let mut cs = mut_iter.filter(|c| c.contains(b1) || c.contains(b2));
-        let c1 = cs.next();
-        let c2 = cs.next();
-
-        match (c1, c2) {
-            (Some(c1), Some(c2)) if c1 == c2 => { continue; },
-            (Some(c1), Some(c2)) => {
-                c1.extend(c2.clone());
-                c2.clear();
-                circuits = circuits.into_iter().filter(|c| !c.is_empty()).collect();
-            },
-            (Some(c1), None) => {
-                c1.insert(*b2);
-                c1.insert(*b1);
-            },
-            _ => {
-                let set = HashSet::from([*b1, *b2]);
-                circuits.push(set);
-            }
-        }
+    let mut circuits = DisjointSet::new(boxes.len());
+    for (b1, b2, _) in distances.iter().take(N_SHORTEST_CONNECTIONS) {
+        circuits.union(*b1, *b2);
     }
 
-    let mut circuit_lengths = circuits.iter().map(|c| c.len() as u64).collect::<Vec<_>>();
+    let mut circuit_lengths = circuits.iter().map(|(_, size)| size as u64).collect::<Vec<_>>();
     circuit_lengths.sort_unstable();
     let result = circuit_lengths.iter().rev().take(N_LONGEST_CIRCUITS).product::<u64>();
 
@@ -67,42 +47,17 @@ pub fn part_two(input: &str) -> Option<u64> {
 
     let distances = calculate_distances_sorted(&boxes);
 
-    let mut circuits : Vec<HashSet<usize>> = Vec::new();
-    let result;
-    let mut idx = 0;
-    loop {
-        let (b1, b2, _) = distances[idx];
-        let mut_iter = circuits.iter_mut();
-        let mut cs = mut_iter.filter(|c| c.contains(&b1) || c.contains(&b2));
-        let c1 = cs.next();
-        let c2 = cs.next();
+    let mut circuits = DisjointSet::new(boxes.len());
+    let mut result = 0;
 
-        match (c1, c2) {
-            (Some(c1), Some(c2)) if c1 == c2 => { continue; },
-            (Some(c1), Some(c2)) => {
-                c1.extend(c2.clone());
-                c2.clear();
-                circuits = circuits.into_iter().filter(|c| !c.is_empty()).collect();
-            },
-            (Some(c1), None) => {
-                c1.insert(b2);
-                c1.insert(b1);
-            },
-            _ => {
-                let set = HashSet::from([b1, b2]);
-                circuits.push(set);
-            }
-        }
-
-        if circuits[0].len() == boxes.len() {
+    for (b1, b2, _) in distances {
+        if circuits.union(b1, b2) == boxes.len() {
             result = boxes[b1].0 * boxes[b2].0;
             break;
-        }
-
-        idx += 1;
+        };
     }
 
-    Some(result as u64)
+    Some(result)
 }
 
 fn calculate_distances_sorted(boxes: &Vec<(u64, u64, u64)>) -> Vec<(usize, usize, u64)> {
